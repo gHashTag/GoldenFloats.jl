@@ -1,0 +1,15 @@
+name = "GoldenFloats"
+uuid = "8c2f3d4e-5a6b-4c7d-8e9f-1a2b3c4d5e6f"
+authors = ["Dmitrii Vasilev <admin@t27.ai>"]
+version = "0.1.0"
+
+[deps]
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
