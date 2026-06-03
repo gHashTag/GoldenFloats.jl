@@ -40,7 +40,7 @@ struct GFFormat
     sign_bits :: Int
     exp_bits  :: Int
     mant_bits :: Int
-    bias      :: Int
+    bias      :: BigInt
 end
 
 # Canonical ladder. Field widths follow t27 goldenfloat_family.t27 verbatim.
@@ -117,7 +117,10 @@ function encode(fmt::GFFormat, x::Real)
         return zero_pattern(bits)
     end
     e_unbiased = floor(Int, log2(ax))
-    e_biased = e_unbiased + fmt.bias
+    # bias is BigInt to accommodate GF256 (2^96-1); narrow to Int for arithmetic
+    # on the small-ladder rungs where the value fits in Int64.
+    bias_int = fmt.bits <= 64 ? Int(fmt.bias) : error("encode not implemented for GF$(fmt.bits) (bias exceeds Int64)")
+    e_biased = e_unbiased + bias_int
     emax = (1 << fmt.exp_bits) - 1
     if e_biased >= emax
         # clamp to max representable (saturate, no Inf in early ladder rungs)
@@ -152,7 +155,8 @@ function decode(fmt::GFFormat, raw::Integer)
     if e_biased == 0 && mant == 0
         return 0.0
     end
-    e_unbiased = Int(e_biased) - fmt.bias
+    bias_int = fmt.bits <= 64 ? Int(fmt.bias) : error("decode not implemented for GF$(fmt.bits) (bias exceeds Int64)")
+    e_unbiased = Int(e_biased) - bias_int
     val = (1.0 + Float64(mant) / Float64(1 << fmt.mant_bits)) * (2.0^e_unbiased)
     return sign == 1 ? -val : val
 end
